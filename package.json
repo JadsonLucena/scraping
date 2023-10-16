@@ -1,0 +1,71 @@
+{
+  "name": "@jadsonlucena/scraping",
+  "version": "0.1.0",
+  "description": "Microservice to extract data and metadata from a web page",
+  "main": "./src/index.js",
+  "type": "module",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "scripts": {
+    "test": "jest './test'",
+    "lint": "eslint ./src ./test --ext .js",
+    "start": "node --trace-warnings --env-file=config.env ./src/index.js"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JadsonLucena/scraping.git"
+  },
+  "keywords": [
+    "scraping",
+    "robot",
+    "bot"
+  ],
+  "author": "JadsonLucena <jadsonlucena@gmail.com> (https://github.com/JadsonLucena)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JadsonLucena/scraping/issues"
+  },
+  "homepage": "https://github.com/JadsonLucena/scraping#readme",
+  "dependencies": {
+    "express": "^4",
+    "puppeteer": "^21"
+  },
+  "devDependencies": {
+    "jest": "latest",
+    "eslint": "latest",
+    "eslint-config-standard": "latest",
+    "eslint-plugin-jest": "latest",
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "verbose": true,
+    "collectCoverageFrom": ["./src/*.js"],
+    "coverageReporters": ["clover", "json", "lcov", "text", "html"],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100,
+        "statements": 100
+      }
+    }
+  },
+  "eslintConfig": {
+    "plugins": ["jest"],
+    "env": {
+        "jest/globals": true
+    },
+    "extends": "standard"
+  },
+  "commitlint": {
+    "extends": ["@commitlint/config-conventional"]
+  }
+}
