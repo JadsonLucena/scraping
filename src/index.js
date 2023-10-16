@@ -1,6 +1,7 @@
 import express from 'express'
 
 import {
+  ALLOW_ORIGIN,
   PORT
 } from './config.js'
 
@@ -21,6 +22,21 @@ app.use((err, req, res, next) => {
 })
 
 app.get('/*', (req, res, next) => {
+  try {
+    const origins = ALLOW_ORIGIN.split(',').map(e => e.trim().toLowerCase()).filter(e => e)
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+
+    if (origins.includes('*') || origins.includes(req.get('host')) || origins.includes(ip)) {
+      res.set('Access-Control-Allow-Origin', origins.includes(req.get('host')) ? req.get('host') : `http://${ip}`)
+
+      next()
+    } else {
+      throw new Error(JSON.stringify({ status: 401, message: 'Unauthorized' }))
+    }
+  } catch (err) {
+    console.error(res, err)
+  }
+}, async (req, res, next) => {
   res.json({})
 })
 
