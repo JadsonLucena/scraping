@@ -2,8 +2,11 @@ import express from 'express'
 
 import {
   ALLOW_ORIGIN,
+  USER_AGENT,
   PORT
 } from './config.js'
+
+import Scraping from './Scraping.js'
 
 const app = express()
 
@@ -39,7 +42,7 @@ app.get('/*', (req, res, next) => {
   } catch (err) {
     console.error(res, err)
   }
-}, async (req, res, next) => {
+}, (req, res, next) => {
   try {
     req.query.url = new URL(req.query.url?.trim())
 
@@ -62,7 +65,27 @@ app.get('/*', (req, res, next) => {
     }))
   }
 }, async (req, res, next) => {
-  res.json({})
+  const data = await Scraping(req.query.url, {
+    fields: req.query.fields,
+    ignoreDisallow: req.query.ignoreDisallow
+  })
+
+  if (req.query.webhookURL.length) {
+    // Implement exponential retry
+    req.query.webhookURL.forEach(url => {
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Content-Type': 'application/json'
+          // 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(data)
+      }).catch(console.error)
+    })
+  }
+
+  res.json(data)
 })
 
 app.all('/*', (req, res) => res.status(200).send('Repository: <a href="https://github.com/jadsonlucena/scraping" target="_blank">@jadsonlucena/scraping</a>'))
