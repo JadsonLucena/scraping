@@ -68,6 +68,8 @@ app.get('/*', (req, res, next) => {
   const data = await Scraping(req.query.url, {
     fields: req.query.fields,
     ignoreDisallow: req.query.ignoreDisallow
+  }).catch(err => {
+    throw err
   })
 
   if (req.query.webhookURL.length) {
