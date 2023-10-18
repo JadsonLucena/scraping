@@ -5,20 +5,30 @@ import {
 
 import puppeteer from 'puppeteer'
 
-const browser = await puppeteer.launch({
-  headless: true,
-  ignoreHTTPSErrors: true,
-  args: [
-    '--no-sandbox'
-  ]
-})
-
 export default (url, {
-  fields,
-  ignoreDisallow
-}) => new Promise((resolve, reject) => {
-  try {
-    browser.newPage().then(async page => {
+  fields = [
+    'title',
+    'description',
+    'keywords',
+    'favicon',
+    'h*',
+    'screenshot'
+  ],
+  ignoreDisallow = false,
+  HTML
+} = {}) => new Promise((resolve, reject) => {
+
+  // robots.txt [Disallow]
+
+  puppeteer.launch({
+    headless: 'new',
+    ignoreHTTPSErrors: true,
+    args: [
+      '--no-sandbox'
+    ]
+  }).then(async browser =>{
+    try {
+      const page = await browser.newPage()
       await page.setViewport({
         width: PAGE_SIZE.WIDTH,
         height: PAGE_SIZE.HEIGHT
@@ -27,67 +37,104 @@ export default (url, {
         waitUntil: 'networkidle0'
       }).catch(reject)
 
-      if (!pageRes.ok()) {
+      if (!pageRes?.ok()) {
+        message = pageRes?.statusText()
+
+        browser.close()
+
         return reject(new Error(JSON.stringify({
           // status: pageRes.status(),
           status: 502,
-          message: pageRes.statusText()
+          message
         })))
       }
 
       const res = {}
 
       if (fields.includes('title')) {
-        res.title = await page.$eval('title', element => element?.textContent).catch(err => {
+        /* istanbul ignore next */
+        res.title = await page.$eval('title', element => element?.textContent?.trim()).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return ''
         })
       }
       if (fields.includes('description')) {
-        res.description = await page.$eval('head > meta[name=\'description\']', element => element?.content).catch(err => {
+        /* istanbul ignore next */
+        res.description = await page.$eval('head > meta[name=\'description\']', element => element?.content?.trim()).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return ''
         })
       }
       if (fields.includes('keywords')) {
+        /* istanbul ignore next */
         res.keywords = await page.$eval('head > meta[name=\'keywords\']', element => element?.content?.split(',').map(key => key.trim())).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return []
         })
       }
       if (fields.includes('favicon')) {
-        res.favicon = await page.$$eval('head > meta[name$=\'image\']', element => element?.content).catch(err => {
+        /* istanbul ignore next */
+        res.favicons = await page.$$eval('head > meta[name$=\'image\']', element => element?.map(e => e.content)).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return []
         })
-        res.favicon = res.favicon.concat(await page.$$eval('head > meta[itemprop=\'image\']', element => element?.content).catch(err => {
+        /* istanbul ignore next */
+        res.favicons = res.favicons.concat(await page.$$eval('head > meta[itemprop=\'image\']', element => element?.map(e => e.content)).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return []
         }))
-        res.favicon = res.favicon.concat(await page.$$eval('head > link[rel$=\'icon\']', element => element?.href).catch(err => {
+        /* istanbul ignore next */
+        res.favicons = res.favicons.concat(await page.$$eval('head > link[rel$=\'icon\']', element => element?.map(e => e.getAttribute('href'))).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return []
         }))
 
-        res.favicon = res.favicon.reduce(async (acc, src) => {
-          const picture = await fetch(new URL(src, url).href, {
-            headers: {
-              'User-Agent': USER_AGENT,
-              Accept: 'image/*'
-              // Authorization: `Bearer ${token}`
-            }
-          }).catch(err => {
-            if (process.env.NODE_ENV !== 'production') console.error(err)
-          })
-
-          if (!picture.ok) {
-            await picture.text().then(message => {
-              if (process.env.NODE_ENV !== 'production') console.error(new Error(message))
-            }).catch(err => {
-              if (process.env.NODE_ENV !== 'production') console.error(err)
-            })
+        res.favicons = res.favicons.map(src => {
+          try {
+            return /^data:image\/[^;]+;base64/.test(src) ? src : new URL(src, url).href
+          } catch(err) {
+            return ''
           }
+        })
+        res.favicons = res.favicons.filter(src => src)
 
-          acc.push(`data:${picture.headers.get('Content-Type')};base64,${Buffer.from(await picture.arrayBuffer().catch(err => {
-            if (process.env.NODE_ENV !== 'production') console.error(err)
-          })).toString('base64')}`)
+        res.favicons = await Promise.allSettled([...new Set(res.favicons)].map(src => new Promise((resolve, reject) => {
+          try {
+            if (/^data:image\/[^;]+;base64/.test(src)) {
+              return resolve(src)
+            }
 
-          return acc
-        }, [])
+            fetch(src, {
+              headers: {
+                'User-Agent': USER_AGENT,
+                'Accept': 'image/*'
+                // Authorization: `Bearer ${token}`
+              }
+            }).then(async picture => {
+              if (!picture.ok) {
+                await picture.text().then(message => {
+                  reject(new Error(message))
+                }).catch(reject)
+              }
+
+              const pictureBuffer = await picture.arrayBuffer().catch(reject)
+
+              resolve(`data:${picture.headers.get('Content-Type')};base64,${Buffer.from(pictureBuffer).toString('base64')}`)
+            }).catch(reject)
+          } catch(err) {
+            reject(err)
+          }
+        }))).then(results => {
+          let favicons = []
+          results.forEach(result => {
+            if (result.status === 'fulfilled') {
+              favicons.push(result.value)
+            } else if (process.env.NODE_ENV !== 'production') {
+              console.error(result.reason)
+            }
+          })
+          return favicons
+        })
       }
       const headersField = fields.filter(field => /^h([1-6](-[1-6])?|\*)$/i.test(field))
       if (headersField.length) {
@@ -108,12 +155,19 @@ export default (url, {
 
         headers = headers.concat(headersField.filter(field => /^h[1-6]$/i.test(field)))
 
-        res.headers = [...new Set(headers)].reduce(async (acc, header) => {
-          acc[header] = await page.$$eval(header, element => element?.textContent).catch(err => {
-            if (process.env.NODE_ENV !== 'production') console.error(err)
-          })
-          return acc
-        }, {})
+        res.headers = Object.assign(...await Promise.all([...new Set(headers)].map(header => new Promise((resolve, reject) => {
+          try {
+            /* istanbul ignore next */
+            page.$$eval(header, element => element?.map(e => e.textContent)).then(headers => {
+              resolve(headers.length ? { [header]: headers } : {})
+            }).catch(reject)
+          } catch(err) {
+            reject(err)
+          }
+        }))).catch(err => {
+          if (process.env.NODE_ENV !== 'production') console.error(err)
+          return {}
+        }))
       }
       if (fields.includes('screenshot')) {
         res.screenshot = `data:image/webp;base64,${await page.screenshot({
@@ -123,12 +177,18 @@ export default (url, {
           type: 'webp'
         }).catch(err => {
           if (process.env.NODE_ENV !== 'production') console.error(err)
+          return ''
         })}`
       }
 
+      browser.close()
+
       resolve(res)
-    }).catch(reject)
-  } catch (err) {
-    reject(err)
-  }
+    } catch (err) {
+      browser.close()
+
+      reject(err)
+    }
+  }).catch(reject)
+
 })

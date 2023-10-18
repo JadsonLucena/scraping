@@ -8,7 +8,7 @@
     "node": ">=20.6"
   },
   "scripts": {
-    "test": "jest './test'",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest ./test --onlyChanged",
     "lint": "eslint ./src ./test --ext .js",
     "start": "node --trace-warnings --env-file=config.env ./src/index.js"
   },
