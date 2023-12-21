@@ -1,12 +1,21 @@
-import express from 'express'
-
 import {
   ALLOW_ORIGIN,
   USER_AGENT,
+  PAGE_SIZE,
+  WS_ENDPOINT_PROXY,
   PORT
 } from './config.js'
 
 import Scraping from './Scraping.js'
+
+import express from 'express'
+import Browser from './Browser.js'
+
+const browser = new Browser({
+  width: PAGE_SIZE.WIDTH,
+  height: PAGE_SIZE.HEIGHT,
+  browserWSEndpoint: WS_ENDPOINT_PROXY
+})
 
 const app = express()
 
@@ -65,29 +74,44 @@ app.get('/*', (req, res, next) => {
     }))
   }
 }, async (req, res, next) => {
-  const data = await Scraping(req.query.url, {
-    fields: req.query.fields,
-    ignoreDisallow: req.query.ignoreDisallow
-  }).catch(err => {
-    throw err
-  })
-
-  if (req.query.webhookURL.length) {
-    // Implement exponential retry
-    req.query.webhookURL.forEach(url => {
-      fetch(url, {
-        method: 'POST',
-        headers: {
-          'User-Agent': USER_AGENT,
-          'Content-Type': 'application/json'
-          // 'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(data)
-      }).catch(console.error)
+  try {
+    const page = await browser.open(req.query.url).catch(err => {
+      throw err
     })
-  }
 
-  res.json(data)
+    const data = await Scraping(page, {
+      fields: req.query.fields,
+      // ignoreDisallow: req.query.ignoreDisallow,
+      userAgent: USER_AGENT
+    }).catch(async err => {
+      await page.close()
+      throw err
+    })
+
+    await page.close().catch(err => {
+      throw err
+    })
+
+    /* if (req.query.webhookURL.length) {
+      // Implement exponential retry
+      req.query.webhookURL.forEach(url => {
+        fetch(url, {
+          method: 'POST',
+          headers: {
+            'User-Agent': USER_AGENT,
+            'Content-Type': 'application/json'
+            // 'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        }).catch(console.error)
+      })
+    } */
+
+    res.json(data)
+  } catch (err) {
+    // res.status(502).send(err.message)
+    res.status(500).send(err.message)
+  }
 })
 
 app.all('/*', (req, res) => res.status(200).send('Repository: <a href="https://github.com/jadsonlucena/scraping" target="_blank">@jadsonlucena/scraping</a>'))

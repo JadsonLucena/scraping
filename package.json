@@ -37,18 +37,26 @@
     "puppeteer": "^21"
   },
   "devDependencies": {
-    "jest": "latest",
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest",
     "eslint": "latest",
     "eslint-config-standard": "latest",
     "eslint-plugin-jest": "latest",
-    "@commitlint/cli": "latest",
-    "@commitlint/config-conventional": "latest"
+    "jest": "^29.7.0"
   },
   "jest": {
     "collectCoverage": true,
     "verbose": true,
-    "collectCoverageFrom": ["./src/*.js"],
-    "coverageReporters": ["clover", "json", "lcov", "text", "html"],
+    "collectCoverageFrom": [
+      "./src/*.js"
+    ],
+    "coverageReporters": [
+      "clover",
+      "json",
+      "lcov",
+      "text",
+      "html"
+    ],
     "coverageThreshold": {
       "global": {
         "branches": 100,
@@ -59,13 +67,17 @@
     }
   },
   "eslintConfig": {
-    "plugins": ["jest"],
+    "plugins": [
+      "jest"
+    ],
     "env": {
-        "jest/globals": true
+      "jest/globals": true
     },
     "extends": "standard"
   },
   "commitlint": {
-    "extends": ["@commitlint/config-conventional"]
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
   }
 }
