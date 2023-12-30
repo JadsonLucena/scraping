@@ -8,6 +8,15 @@ const PAGE_SIZE = {
   HEIGHT: 720
 }
 
+const INVALID_INPUT_TYPES = [
+  '',
+  Infinity,
+  NaN,
+  [],
+  null,
+  false
+]
+
 test('Given that you want to launch a browser', async () => {
   const browser = new Browser({
     width: PAGE_SIZE.WIDTH,
@@ -20,6 +29,21 @@ test('Given that you want to launch a browser', async () => {
     height: PAGE_SIZE.HEIGHT
   })
   expect(browser.pages).toEqual([])
+
+  INVALID_INPUT_TYPES.forEach(input => {
+    expect(() => {
+      browser.size = {
+        width: input
+      }
+    }).toThrowError(new Error('Invalid width'))
+  })
+  INVALID_INPUT_TYPES.forEach(input => {
+    expect(() => {
+      browser.size = {
+        height: input
+      }
+    }).toThrowError(new Error('Invalid height'))
+  })
 
   const resize = {
     width: 640,
@@ -44,6 +68,10 @@ test('Given that you want to load a page', async () => {
   })
 
   await expect(browser.open('about:blank')).rejects.toThrowError(new Error('This web page is not available'))
+
+  INVALID_INPUT_TYPES.concat(undefined, 0).forEach(input => {
+    expect(browser.open(input)).rejects.toThrowError(new Error('Invalid URL'))
+  })
 
   const url = 'chrome://version'
   const page = await browser.open(url)

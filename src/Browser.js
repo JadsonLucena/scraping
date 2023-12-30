@@ -27,6 +27,12 @@ export default class Browser {
     width = 1280,
     height = 720
   } = {}) {
+    if (!Number.isSafeInteger(width)) {
+      throw new Error('Invalid width')
+    } else if (!Number.isSafeInteger(height)) {
+      throw new Error('Invalid height')
+    }
+
     this.#size = {
       width,
       height
@@ -95,6 +101,10 @@ export default class Browser {
   }
 
   async open (url) {
+    if (typeof url !== 'string' || !url) {
+      throw new Error('Invalid URL')
+    }
+
     if (!this.#browser) {
       this.#browser = await this.#startBrowser()
     }
