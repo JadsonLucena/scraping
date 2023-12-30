@@ -106,7 +106,7 @@ export default class Browser {
         waitUntil: 'networkidle0'
       })
 
-      if (!res?.ok()) {
+      if (!res?.ok() && res?.status() !== 304) {
         throw new Error(res?.statusText() ?? 'This web page is not available')
       }
     }
