@@ -116,7 +116,7 @@ test('Given that you want to get the description of a website', async () => {
 
 test('Given that you want to get the favicon of a website', async () => {
   const scraping = await Scraping(page, {
-    fields: ['favicon'],
+    fields: ['favicons'],
     userAgent: USER_AGENT
   })
 
@@ -253,7 +253,7 @@ test('Given that you want to get the favicons and one of the links is broken', a
   })
 
   const scraping = await Scraping(page, {
-    fields: ['favicon'],
+    fields: ['favicons'],
     userAgent: USER_AGENT
   })
 
@@ -291,7 +291,7 @@ test('Given that you want to get the favicons and one of the links is invalid', 
   })
 
   const scraping = await Scraping(page, {
-    fields: ['favicon'],
+    fields: ['favicons'],
     userAgent: USER_AGENT
   })
 

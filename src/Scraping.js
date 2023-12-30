@@ -1,8 +1,6 @@
-function parseHeaderList (headersField) {
-  const allHeaders = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
-
+function headerListParser (headersField) {
   if (headersField.some(field => field.trim().toLowerCase() === 'h*')) {
-    return allHeaders
+    return ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
   }
 
   const headers = headersField.filter(field => /^h[1-6](-[1-6])?$/i.test(field)).reduce((acc, field) => {
@@ -27,15 +25,12 @@ export default async (page, {
     'title',
     'description',
     'keywords',
-    'favicon',
+    'favicons',
     'h*',
     'screenshot'
   ],
-  // ignoreDisallow = false,
   userAgent = 'Scraping'
 } = {}) => {
-  // robots.txt [Disallow]
-
   const res = {}
 
   if (fields.includes('title')) {
@@ -50,7 +45,7 @@ export default async (page, {
     res.keywords = await page.querySelector('head > meta[name=\'keywords\']', keywords => keywords.content?.split(',')?.map(key => key.trim())?.filter(key => key)).catch(() => [])
   }
 
-  if (fields.includes('favicon')) {
+  if (fields.includes('favicons')) {
     res.favicons = []
     res.favicons = res.favicons.concat(await page.querySelectorAll('head > meta[name$=\'image\']', favicons => favicons.map(favicon => favicon.content)).catch(() => []))
     res.favicons = res.favicons.concat(await page.querySelectorAll('head > meta[itemprop=\'image\']', favicons => favicons.map(favicon => favicon.content)).catch(() => []))
@@ -99,7 +94,7 @@ export default async (page, {
 
   const headersField = fields.filter(field => /^h([1-6](-[1-6])?|\*)$/i.test(field))
   if (headersField.length) {
-    const headers = parseHeaderList(headersField)
+    const headers = headerListParser(headersField)
     res.headers = await Promise.allSettled(headers.map(header => page.querySelectorAll(header, headers => headers.map(header => header.textContent))))
       .then(res => res.reduce((acc, header, i) => {
         if (header.status === 'fulfilled') {
