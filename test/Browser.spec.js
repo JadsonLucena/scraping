@@ -35,14 +35,14 @@ test('Given that you want to launch a browser', async () => {
       browser.size = {
         width: input
       }
-    }).toThrowError(new Error('Invalid width'))
+    }).toThrowError(new TypeError('Invalid width'))
   })
   INVALID_INPUT_TYPES.forEach(input => {
     expect(() => {
       browser.size = {
         height: input
       }
-    }).toThrowError(new Error('Invalid height'))
+    }).toThrowError(new TypeError('Invalid height'))
   })
 
   const resize = {
@@ -70,7 +70,7 @@ test('Given that you want to load a page', async () => {
   await expect(browser.open('about:blank')).rejects.toThrowError(new Error('This web page is not available'))
 
   INVALID_INPUT_TYPES.concat(undefined, 0).forEach(input => {
-    expect(browser.open(input)).rejects.toThrowError(new Error('Invalid URL'))
+    expect(browser.open(input)).rejects.toThrowError(new TypeError('Invalid URL'))
   })
 
   const url = 'chrome://version'
