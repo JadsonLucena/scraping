@@ -92,6 +92,32 @@ beforeEach(() => {
   })
 })
 
+const INVALID_INPUT_TYPES = [
+  '',
+  0,
+  Infinity,
+  NaN,
+  null,
+  false
+]
+
+test('Given you want to call function with invalid arguments', () => {
+  INVALID_INPUT_TYPES.concat([], undefined).forEach(input => {
+    expect(Scraping(input)).rejects.toThrowError(new TypeError('Invalid page'))
+  })
+  expect(Scraping({})).rejects.toThrowError()
+  INVALID_INPUT_TYPES.forEach(input => {
+    expect(Scraping(page, {
+      fields: input
+    })).rejects.toThrowError(new TypeError('Invalid fields'))
+  })
+  INVALID_INPUT_TYPES.concat([]).forEach(input => {
+    expect(Scraping(page, {
+      userAgent: input
+    })).rejects.toThrowError(new TypeError('Invalid userAgent'))
+  })
+})
+
 test('Given that you want to get the title of a website', async () => {
   const scraping = await Scraping(page, {
     fields: ['title'],

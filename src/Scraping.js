@@ -31,6 +31,18 @@ export default async (page, {
   ],
   userAgent = 'Scraping'
 } = {}) => {
+  if (
+    typeof page !== 'object' ||
+    page === null ||
+    Array.isArray(page)
+  ) {
+    throw new TypeError('Invalid page')
+  } else if (!Array.isArray(fields) || !fields.length) {
+    throw new TypeError('Invalid fields')
+  } else if (typeof userAgent !== 'string' || !userAgent.trim()) {
+    throw new TypeError('Invalid userAgent')
+  }
+
   const res = {}
 
   if (fields.includes('title')) {
