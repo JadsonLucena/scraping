@@ -6,10 +6,10 @@ import {
   PORT
 } from './config.js'
 
-import Scraping from './Scraping.js'
+import Scraping from './domain/Scraping.js'
 
 import express from 'express'
-import Browser from './Browser.js'
+import Browser from './infrastructure/gateways/Browser.js'
 
 const browser = new Browser({
   width: PAGE_SIZE.WIDTH,
@@ -32,6 +32,8 @@ app.use((err, req, res, next) => {
     res.status(500).send(err.message)
   }
 })
+
+app.get('/favicon.ico', (req, res) => res.status(204))
 
 app.get('/*', (req, res, next) => {
   try {
@@ -75,7 +77,7 @@ app.get('/*', (req, res, next) => {
   }
 }, async (req, res, next) => {
   try {
-    const page = await browser.open(req.query.url).catch(err => {
+    const page = await browser.open(req.query.url.href).catch(err => {
       throw err
     })
 

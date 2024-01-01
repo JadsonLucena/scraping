@@ -1,6 +1,6 @@
 import { expect, jest, test } from '@jest/globals'
 
-import Scraping from '../src/Scraping'
+import Scraping from '../src/domain/Scraping'
 
 const USER_AGENT = '@jadsonlucena/scraping'
 
