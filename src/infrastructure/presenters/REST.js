@@ -1,21 +1,16 @@
 import RouterExpress from '../gateways/RouterExpress.js'
 import Scraping from '../controllers/Scraping.js'
 
-import querystring from 'node:querystring'
-
 const router = new RouterExpress()
 
 router.get('/*', async (req, res) => {
   try {
-    const url = new URL(req.protocol + '://' + req.hostname + req.originalUrl)
-    const querys = querystring.parse(url.searchParams.toString())
-
-    const { headers, data } = await Scraping(new URL(querys.url), {
-      fields: querys.fields,
-      ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
-    }, {
-      ignoreDisallowedRobots: querys.ignoreDisallowedRobots,
-      noCache: querys.noCache
+    const url = new URL((req.protocol ?? 'http') +'://' + req.headers.host + req.originalUrl)
+  
+    const { headers, data } = await Scraping(url, {
+      authorization: req.headers.authorization,
+      cookie: req.headers.cookie,
+      ip: req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
     })
 
     res.writeHead(200, Object.assign({

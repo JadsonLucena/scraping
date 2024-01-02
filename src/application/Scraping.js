@@ -14,15 +14,13 @@ export default async (browser, url, {
     fields = [].concat(fields).flat().map(field => field.trim().toLowerCase()).filter(field => field)
   }
 
-  if (!ignoreDisallowedRobots) {
-    if (!RouteIsAllowedForRobots(url, RobotsTxt.parse(await GetRobotsTxt(url, userAgent)), {
-      userAgent
-    })) {
-      throw new Error(JSON.stringify({
-        status: 403,
-        message: 'Route is not allowed for robots'
-      }))
-    }
+  if (!ignoreDisallowedRobots && !RouteIsAllowedForRobots(url, RobotsTxt.parse(await GetRobotsTxt(url, userAgent)), {
+    userAgent
+  })) {
+    throw new Error(JSON.stringify({
+      status: 403,
+      message: 'Route is not allowed for robots'
+    }))
   }
 
   const page = await browser.open(url.href)

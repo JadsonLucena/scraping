@@ -34,7 +34,8 @@
   "homepage": "https://github.com/JadsonLucena/scraping#readme",
   "dependencies": {
     "express": "^4",
-    "puppeteer": "^21"
+    "puppeteer": "^21",
+    "@jadsonlucena/signedaccess": "^1"
   },
   "devDependencies": {
     "@commitlint/cli": "latest",
@@ -42,7 +43,7 @@
     "eslint": "latest",
     "eslint-config-standard": "latest",
     "eslint-plugin-jest": "latest",
-    "jest": "^29.7.0"
+    "jest": "latest"
   },
   "jest": {
     "collectCoverage": true,

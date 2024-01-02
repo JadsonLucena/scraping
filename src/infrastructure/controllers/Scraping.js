@@ -1,13 +1,18 @@
 import {
   ALLOWED_ORIGINS,
+  AUTHORIZATION,
   USER_AGENT,
   PAGE_SIZE,
   WS_ENDPOINT_PROXY
 } from '../../config.js'
 
 import Browser from '../gateways/BrowserPuppeteer.js'
+import Cookie from '../../application/service/Cookie.js'
+import Authorization from '../../application/service/Authorization.js'
 import AllowedOrigin from '../../application/service/AllowedOrigin.js'
 import Scraping from '../../application/Scraping.js'
+
+import querystring from 'node:querystring'
 
 const browser = new Browser({
   width: PAGE_SIZE.WIDTH,
@@ -16,16 +21,22 @@ const browser = new Browser({
 })
 
 export default async (url, {
-  fields,
-  ip
-}, {
-  ignoreDisallowedRobots = false,
-  noCache = false
+  authorization = '',
+  cookie = '',
+  ip = ''
 } = {}) => {
-  // AccessSigned
-  // MemCache
+  const querys = querystring.parse(url.searchParams.toString())
 
-  const headers = {}
+  if (AUTHORIZATION && !Authorization(AUTHORIZATION, {
+    authorization,
+    cookie: Cookie.parse(cookie).scraping,
+    url
+  }, ip)) {
+    throw new Error(JSON.stringify({
+      status: 401,
+      message: 'Unauthorized'
+    }))
+  }
 
   const allowedOrigin = AllowedOrigin(ALLOWED_ORIGINS, {
     host: url.origin,
@@ -34,17 +45,21 @@ export default async (url, {
 
   if (!allowedOrigin) {
     throw new Error(JSON.stringify({
-      status: 401,
-      message: 'Unauthorized'
+      status: 403,
+      message: 'Forbidden'
     }))
   }
 
-  headers['Access-Control-Allow-Origin'] = allowedOrigin
+  const headers = {
+    'Access-Control-Allow-Origin': allowedOrigin
+  }
 
-  const data = await Scraping(browser, url, {
-    fields,
-    userAgent: USER_AGENT,
-    ignoreDisallowedRobots
+  // MemCache [querys.noCache]
+
+  const data = await Scraping(browser, new URL(querys.url), {
+    fields: querys.fields,
+    ignoreDisallowedRobots: querys.ignoreDisallowedRobots,
+    userAgent: USER_AGENT
   })
 
   return {
