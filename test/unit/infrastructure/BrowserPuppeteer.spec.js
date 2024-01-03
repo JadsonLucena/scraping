@@ -1,7 +1,7 @@
 import { expect, test } from '@jest/globals'
 import puppeteer from 'puppeteer'
 
-import Browser from '../src/infrastructure/gateways/BrowserPuppeteer'
+import Browser from '../../../src/infrastructure/gateways/BrowserPuppeteer'
 
 const PAGE_SIZE = {
   WIDTH: 1280,
