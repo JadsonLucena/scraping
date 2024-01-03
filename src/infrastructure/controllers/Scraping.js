@@ -23,6 +23,7 @@ const browser = new Browser({
 export default async (url, {
   authorization = '',
   cookie = '',
+  origin = '',
   ip = ''
 } = {}) => {
   const querys = querystring.parse(url.searchParams.toString())
@@ -39,7 +40,7 @@ export default async (url, {
   }
 
   const allowedOrigin = AllowedOrigin(ALLOWED_ORIGINS, {
-    host: url.origin,
+    origin,
     ip
   })
 

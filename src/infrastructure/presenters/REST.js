@@ -5,11 +5,12 @@ const router = new RouterExpress()
 
 router.get('/*', async (req, res) => {
   try {
-    const url = new URL((req.protocol ?? 'http') +'://' + req.headers.host + req.originalUrl)
-  
+    const url = new URL((req.protocol ?? 'http') + '://' + req.headers.host + req.originalUrl)
+
     const { headers, data } = await Scraping(url, {
       authorization: req.headers.authorization,
       cookie: req.headers.cookie,
+      origin: req.headers.origin,
       ip: req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
     })
 
