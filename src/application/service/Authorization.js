@@ -5,25 +5,32 @@ export default (key, {
   cookie = '',
   url = ''
 }, remoteAddress = '') => {
+  if (typeof key !== 'string' || !key.trim()) {
+    throw new TypeError('Invalid key')
+  }
+
+  if (
+    typeof authorization === 'string' && authorization.trim() &&
+    key === authorization.replace(/\s{2,}/g, ' ').trim().split(' ').pop()
+  ) {
+    return true
+  }
+
   const signedAccess = new SignedAccess({
     key
   })
 
   if (
-    authorization &&
-    key === authorization.replace(/\s{2,}/g, ' ').trim().split(' ').pop()
-  ) {
-    return true
-  } else if (
-    url &&
-    signedAccess.verifyURL(url.href, {
+    typeof url === 'string' && url.trim() &&
+    signedAccess.verifyURL(url, {
       remoteAddress
     })
   ) {
     return true
   } else if (
-    cookie &&
-    signedAccess.verifyCookie(url.href, cookie, {
+    typeof url === 'string' && url.trim() &&
+    typeof cookie === 'string' && cookie.trim() &&
+    signedAccess.verifyCookie(url, cookie, {
       remoteAddress
     })
   ) {
