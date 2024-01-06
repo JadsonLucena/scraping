@@ -4,6 +4,8 @@ import AllowedOrigin from '../../../../src/application/service/AllowedOrigin'
 
 const INVALID_INPUT_TYPES = [
   0,
+  {},
+  () => {},
   Infinity,
   NaN,
   null,

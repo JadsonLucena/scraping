@@ -95,6 +95,7 @@ beforeEach(() => {
 const INVALID_INPUT_TYPES = [
   '',
   0,
+  () => {},
   Infinity,
   NaN,
   null,

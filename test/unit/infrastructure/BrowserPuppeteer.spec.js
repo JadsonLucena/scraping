@@ -10,9 +10,11 @@ const PAGE_SIZE = {
 
 const INVALID_INPUT_TYPES = [
   '',
+  [],
+  {},
+  () => {},
   Infinity,
   NaN,
-  [],
   null,
   false
 ]
