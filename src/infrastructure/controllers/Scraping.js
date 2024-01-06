@@ -57,8 +57,17 @@ export default async (url, {
 
   // MemCache [querys.noCache]
 
+  let fields = []
+  if (querys.fields) {
+    if (typeof querys.fields === 'string') {
+      fields = fields.trim().split(',')
+    }
+
+    fields = fields.flat().map(field => field.trim().toLowerCase()).filter(field => field)
+  }
+
   const data = await Scraping(browser, new URL(querys.url), {
-    fields: querys.fields,
+    fields,
     ignoreDisallowedRobots: querys.ignoreDisallowedRobots,
     userAgent: USER_AGENT
   })
