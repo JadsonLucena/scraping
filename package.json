@@ -49,7 +49,7 @@
     "collectCoverage": true,
     "verbose": true,
     "collectCoverageFrom": [
-      "./src/*.js"
+      "./src/**/*.js"
     ],
     "coverageReporters": [
       "clover",
