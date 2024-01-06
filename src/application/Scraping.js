@@ -3,15 +3,10 @@ import IsRouteAllowedForRobots from './service/RobotsTxt.js'
 import Scraping from '../domain/Scraping.js'
 
 export default async (browser, url, {
-  fields,
+  fields = [],
   userAgent,
   ignoreDisallowedRobots = false
 } = {}) => {
-  if (fields) {
-    if (typeof fields === 'string') fields = fields.trim().split(',').map(field => field.trim().toLowerCase()).filter(field => field)
-    fields = [].concat(fields).flat().map(field => field.trim().toLowerCase()).filter(field => field)
-  }
-
   if (!ignoreDisallowedRobots && !IsRouteAllowedForRobots(url, userAgent)) {
     throw new Error(JSON.stringify({
       status: 403,
