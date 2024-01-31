@@ -4,8 +4,8 @@ import puppeteer from 'puppeteer'
 import Browser from '../../../src/infrastructure/gateways/BrowserPuppeteer'
 
 const PAGE_SIZE = {
-  WIDTH: 1280,
-  HEIGHT: 720
+  width: 1280,
+  height: 720
 }
 
 const INVALID_INPUT_TYPES = [
@@ -20,16 +20,10 @@ const INVALID_INPUT_TYPES = [
 ]
 
 test('Given that you want to launch a browser', async () => {
-  const browser = new Browser({
-    width: PAGE_SIZE.WIDTH,
-    height: PAGE_SIZE.HEIGHT
-  })
+  const browser = new Browser(PAGE_SIZE)
 
   expect(browser).toBeInstanceOf(Browser)
-  expect(browser.size).toEqual({
-    width: PAGE_SIZE.WIDTH,
-    height: PAGE_SIZE.HEIGHT
-  })
+  expect(browser.size).toEqual(PAGE_SIZE)
   expect(browser.pages).toEqual([])
 
   INVALID_INPUT_TYPES.forEach(input => {
@@ -55,25 +49,19 @@ test('Given that you want to launch a browser', async () => {
   expect(browser.size).toEqual(resize)
 
   browser.size = undefined
-  expect(browser.size).toEqual({
-    width: PAGE_SIZE.WIDTH,
-    height: PAGE_SIZE.HEIGHT
-  })
+  expect(browser.size).toEqual(PAGE_SIZE)
 
   return expect(browser.close()).resolves.toBeUndefined()
 })
 
 test('Given that you want to load a page', async () => {
-  const browser = new Browser({
-    width: PAGE_SIZE.WIDTH,
-    height: PAGE_SIZE.HEIGHT
-  })
+  const browser = new Browser(PAGE_SIZE)
 
   await expect(browser.open('about:blank')).rejects.toThrowError(new Error('This web page is not available'))
 
-  INVALID_INPUT_TYPES.concat(undefined, 0).forEach(input => {
-    expect(browser.open(input)).rejects.toThrowError(new TypeError('Invalid URL'))
-  })
+  for (const input of INVALID_INPUT_TYPES.concat(undefined, 0)) {
+    await expect(browser.open(input)).rejects.toThrowError(new TypeError('Invalid URL'))
+  }
 
   const url = 'chrome://version'
   const page = await browser.open(url)
@@ -99,10 +87,7 @@ test('Given that you want to load a page', async () => {
 })
 
 test('Given that you want to get the page data', async () => {
-  const browser = new Browser({
-    width: PAGE_SIZE.WIDTH,
-    height: PAGE_SIZE.HEIGHT
-  })
+  const browser = new Browser(PAGE_SIZE)
 
   const url = 'chrome://version'
   const page = await browser.open(url)
