@@ -113,6 +113,7 @@ export default class Browser {
       this.#pages[url] = await this.#browser.newPage()
 
       const res = await this.#pages[url].goto(url, {
+        timeout: 0,
         waitUntil: 'networkidle0'
       })
 
