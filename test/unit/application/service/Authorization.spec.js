@@ -63,7 +63,7 @@ test('Given that you want to verify authorization through the signed url', () =>
   })
 
   expect(Authorization(KEY, {
-    url: expiredURL
+    url: new URL(expiredURL)
   })).toBeFalsy()
 
   const signedAccess = new SignedAccess({
@@ -71,7 +71,7 @@ test('Given that you want to verify authorization through the signed url', () =>
   })
 
   expect(Authorization(KEY, {
-    url: signedAccess.signURL(url)
+    url: new URL(signedAccess.signURL(url))
   })).toBeTruthy()
 
   expect(Authorization(KEY, {
@@ -80,9 +80,9 @@ test('Given that you want to verify authorization through the signed url', () =>
     })
   }, '192.168.0.1')).toBeFalsy()
   expect(Authorization(KEY, {
-    url: signedAccess.signURL(url, {
+    url: new URL(signedAccess.signURL(url, {
       remoteAddress: ip
-    })
+    }))
   }, ip)).toBeTruthy()
 })
 
@@ -94,13 +94,13 @@ test('Given that you want to verify authorization through the signed cookie', ()
   INVALID_INPUT_TYPES.forEach(input => {
     expect(Authorization(KEY, {
       cookie: input,
-      url
+      url: new URL(url)
     })).toBeFalsy()
   })
 
   expect(Authorization(KEY, {
     cookie: expiredCookie,
-    url
+    url: new URL(url)
   })).toBeFalsy()
 
   const signedAccess = new SignedAccess({
@@ -109,19 +109,19 @@ test('Given that you want to verify authorization through the signed cookie', ()
 
   expect(Authorization(KEY, {
     cookie: signedAccess.signCookie(url),
-    url
+    url: new URL(url)
   })).toBeTruthy()
 
   expect(Authorization(KEY, {
     cookie: signedAccess.signCookie(url, {
       remoteAddress: ip
     }),
-    url
+    url: new URL(url)
   }, '192.168.0.1')).toBeFalsy()
   expect(Authorization(KEY, {
     cookie: signedAccess.signCookie(url, {
       remoteAddress: ip
     }),
-    url
+    url: new URL(url)
   }, ip)).toBeTruthy()
 })

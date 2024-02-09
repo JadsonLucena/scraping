@@ -3,7 +3,7 @@ import SignedAccess from '../../infrastructure/gateways/SignedAccess.js'
 export default (key, {
   authorization = '',
   cookie = '',
-  url = ''
+  url
 }, remoteAddress = '') => {
   if (typeof key !== 'string' || !key.trim()) {
     throw new TypeError('Invalid key')
@@ -21,16 +21,16 @@ export default (key, {
   })
 
   if (
-    typeof url === 'string' && url.trim() &&
-    signedAccess.verifyURL(url, {
+    url instanceof URL &&
+    signedAccess.verifyURL(url.href, {
       remoteAddress
     })
   ) {
     return true
   } else if (
-    typeof url === 'string' && url.trim() &&
+    url instanceof URL &&
     typeof cookie === 'string' && cookie.trim() &&
-    signedAccess.verifyCookie(url, cookie, {
+    signedAccess.verifyCookie(url.href, cookie, {
       remoteAddress
     })
   ) {

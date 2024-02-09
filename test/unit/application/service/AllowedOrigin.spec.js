@@ -74,11 +74,11 @@ test('Given that you want to verify allowed origins', () => {
     ip: ALLOWED_ORIGINS[1]
   })).toBe(`http://${ALLOWED_ORIGINS[1]}`)
 
-  expect(AllowedOrigin('*', {
+  expect(AllowedOrigin(['*'], {
     origin: `http://${ALLOWED_ORIGINS[0]}`,
     ip: ALLOWED_ORIGINS[1]
   })).toBe(`http://${ALLOWED_ORIGINS[0]}`)
-  expect(AllowedOrigin('*', {
+  expect(AllowedOrigin(['*'], {
     origin: undefined,
     ip: ALLOWED_ORIGINS[1]
   })).toBe(`http://${ALLOWED_ORIGINS[1]}`)
