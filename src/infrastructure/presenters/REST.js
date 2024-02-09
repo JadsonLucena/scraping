@@ -1,36 +1,52 @@
 import RouterExpress from '../gateways/RouterExpress.js'
 import Scraping from '../controllers/Scraping.js'
+import {
+  ALLOWED_ORIGINS,
+  AUTHORIZATION,
+  USER_AGENT,
+  PAGE_SIZE,
+  WS_ENDPOINT_PROXY,
+  ENV
+} from '../../config.js'
 
+const scraping = new Scraping({
+  ALLOWED_ORIGINS,
+  AUTHORIZATION,
+  USER_AGENT,
+  PAGE_SIZE,
+  WS_ENDPOINT_PROXY,
+  ENV
+})
 const router = new RouterExpress()
 
 router.get('/*', async (req, res) => {
   try {
     const url = new URL((req.protocol ?? 'http') + '://' + req.headers.host + req.originalUrl)
 
-    const { headers, data } = await Scraping(url, {
+    const { headers, data } = await scraping.handler(url, {
       authorization: req.headers.authorization,
       cookie: req.headers.cookie,
       origin: req.headers.origin,
       ip: req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
     })
 
-    res.writeHead(200, Object.assign({
-      'Content-Type': 'application/json'
-    }, headers))
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      ...headers
+    })
     res.end(JSON.stringify(data))
   } catch (err) {
-    // if (process.env.NODE_ENV !== 'production') process.stderr.write(`${err.stack}\n`)
-    if (process.env.NODE_ENV !== 'production') console.error(err)
+    // if (ENV !== 'production') process.stderr.write(`${err.stack}\n`)
+    if (ENV !== 'production') console.error(err)
 
-    let message = err.message
     try {
+      err = JSON.parse(err.message)
       res.writeHead(err.status, { 'Content-Type': 'text/plain' })
-      message = JSON.parse(err.message)
     } catch (_) {
       res.writeHead(500, { 'Content-Type': 'text/plain' })
     }
 
-    res.end(message)
+    res.end(err.message)
   }
 })
 
@@ -40,8 +56,8 @@ router.all('/*', (req, res) => {
 })
 
 /* router.error((err, req, res) => {
-  // if (process.env.NODE_ENV !== 'production') process.stderr.write(`${err.stack}\n`)
-  if (process.env.NODE_ENV !== 'production') console.error(err)
+  // if (ENV !== 'production') process.stderr.write(`${err.stack}\n`)
+  if (ENV !== 'production') console.error(err)
 
   try {
     err = JSON.parse(err.message)

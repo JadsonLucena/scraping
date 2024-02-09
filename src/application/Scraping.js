@@ -7,7 +7,7 @@ export default async (browser, url, {
   userAgent,
   ignoreDisallowedRobots = false
 } = {}) => {
-  if (/^(false|0|)$/.test(ignoreDisallowedRobots) && !await IsRouteAllowedForRobots(url, userAgent)) {
+  if (/^(false|0|undefined|null|NaN|)$/.test(ignoreDisallowedRobots) && !await IsRouteAllowedForRobots(url, userAgent)) {
     throw new Error(JSON.stringify({
       status: 403,
       message: 'Route is not allowed for robots'
