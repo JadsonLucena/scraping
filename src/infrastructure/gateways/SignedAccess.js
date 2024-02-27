@@ -39,17 +39,35 @@ export default class SignedAccess {
     this.#signedAccess.ttl = ttl
   }
 
+  signURL (url, {
+    remoteAddress = '',
+    pathname = ''
+  } = {}) {
+    return this.#signedAccess.signURL(url, {
+      remoteAddress,
+      pathname
+    })
+  }
+
   verifyURL (url, {
     remoteAddress = ''
-  }) {
+  } = {}) {
     return this.#signedAccess.verifyURL(url, {
+      remoteAddress
+    })
+  }
+
+  signCookie (url, {
+    remoteAddress = ''
+  } = {}) {
+    return this.#signedAccess.signCookie(url, {
       remoteAddress
     })
   }
 
   verifyCookie (url, cookie, {
     remoteAddress = ''
-  }) {
+  } = {}) {
     return this.#signedAccess.verifyCookie(url, cookie, {
       remoteAddress
     })

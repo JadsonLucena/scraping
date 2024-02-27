@@ -13,6 +13,11 @@ const PAGE_SIZE = {
 const WS_ENDPOINT_PROXY = process.env.WS_ENDPOINT_PROXY
 const PORT = process.env.PORT || 3000
 const ENV = process.env.ENV || process.env.NODE_ENV
+const TLS = {
+  CERT: process.env.TLS_CERT,
+  KEY: process.env.TLS_KEY
+}
+const USE_HTTP2 = !/^(false|0|undefined|null|NaN|)$/.test(process.env.USE_HTTP2)
 
 export {
   ALLOWED_ORIGINS,
@@ -21,5 +26,7 @@ export {
   PAGE_SIZE,
   WS_ENDPOINT_PROXY,
   PORT,
-  ENV
+  ENV,
+  TLS,
+  USE_HTTP2
 }
