@@ -5,7 +5,6 @@ export default class RouterExpress {
 
   constructor () {
     this.#router = express.Router()
-    this.#router.use(express.json())
   }
 
   handler = (req, res) => {
@@ -13,36 +12,36 @@ export default class RouterExpress {
   }
 
   get = (path, ...middlewares) => {
-    this.#router.get(path, middlewares.map(middleware => {
+    this.#router.get(path, ...middlewares.map(middleware => {
       return async (req, res, next) => {
-        await middleware(req, res)
+        let error
+        try {
+          await middleware(req, res)
+        } catch (err) {
+          error = err
+        }
 
         if (!res.finished) {
-          next()
+          next(error)
         }
       }
     }))
   }
 
-  all = (path, ...middlewares) => {
-    this.#router.all(path, middlewares.map(middleware => {
-      return async (req, res, next) => {
-        await middleware(req, res)
+  error = (...middlewares) => {
+    this.#router.use(...middlewares.map(middleware => {
+      return async (err, req, res, next) => {
+        let error
+        try {
+          await middleware(err, req, res)
+        } catch (err) {
+          error = err
+        }
 
         if (!res.finished) {
-          next()
+          next(error)
         }
       }
     }))
-  }
-
-  error = errorHandler => {
-    this.#router.use(async (err, req, res, next) => {
-      await errorHandler(err, req, res)
-
-      if (!res.finished) {
-        next(err)
-      }
-    })
   }
 }

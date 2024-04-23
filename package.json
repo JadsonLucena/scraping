@@ -43,7 +43,8 @@
     "eslint": "latest",
     "eslint-config-standard": "latest",
     "eslint-plugin-jest": "latest",
-    "jest": "latest"
+    "jest": "latest",
+    "node-mocks-http": "latest"
   },
   "jest": {
     "collectCoverage": true,
