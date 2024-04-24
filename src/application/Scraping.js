@@ -14,7 +14,9 @@ export default async (browser, url, {
     }))
   }
 
-  const page = await browser.open(url.href)
+  const page = await browser.open(url.href, {
+    userAgent
+  })
 
   const data = await Scraping(page, {
     fields,

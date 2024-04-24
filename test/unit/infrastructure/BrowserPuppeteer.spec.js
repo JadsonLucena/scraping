@@ -57,7 +57,10 @@ test('Given that you want to launch a browser', async () => {
 test('Given that you want to load a page', async () => {
   const browser = new Browser(PAGE_SIZE)
 
-  await expect(browser.open('about:blank')).rejects.toThrowError(new Error('This web page is not available'))
+  await expect(browser.open('about:blank')).rejects.toThrowError(new Error(JSON.stringify({
+    status: 404,
+    message: 'This web page is not available'
+  })))
 
   for (const input of INVALID_INPUT_TYPES.concat(undefined, 0)) {
     await expect(browser.open(input)).rejects.toThrowError(new TypeError('Invalid URL'))

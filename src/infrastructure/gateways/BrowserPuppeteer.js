@@ -100,7 +100,9 @@ export default class Browser {
     })
   }
 
-  async open (url) {
+  async open (url, {
+    userAgent = 'Scraping'
+  } = {}) {
     if (typeof url !== 'string' || !url.trim()) {
       throw new TypeError('Invalid URL')
     }
@@ -111,6 +113,8 @@ export default class Browser {
 
     if (url && !(url in this.#pages)) {
       this.#pages[url] = await this.#browser.newPage()
+
+      this.#pages[url].setUserAgent(userAgent)
 
       const res = await this.#pages[url].goto(url, {
         timeout: 0,
