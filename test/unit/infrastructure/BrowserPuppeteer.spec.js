@@ -59,12 +59,27 @@ test('Given that you want to load a page', async () => {
 
   await expect(browser.open('about:blank')).rejects.toThrowError(new Error(JSON.stringify({
     status: 404,
-    message: 'This web page is not available'
+    message: 'Not Found'
+  })))
+
+  await expect(browser.open('https://foo.bar')).rejects.toThrowError(new Error(JSON.stringify({
+    status: 404,
+    message: 'Not Found'
   })))
 
   for (const input of INVALID_INPUT_TYPES.concat(undefined, 0)) {
     await expect(browser.open(input)).rejects.toThrowError(new TypeError('Invalid URL'))
   }
+
+  const urlFlags = 'chrome://flags'
+  await browser.open(urlFlags)
+
+  expect(browser.pages).toHaveLength(1)
+  expect(browser.pages).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ url: urlFlags })
+    ])
+  )
 
   const url = 'chrome://version'
   const page = await browser.open(url)
@@ -87,7 +102,7 @@ test('Given that you want to load a page', async () => {
   await expect(browser.close()).resolves.toBeUndefined()
 
   return expect(browser.pages).toHaveLength(0)
-})
+}, 10_000)
 
 test('Given that you want to get the page data', async () => {
   const browser = new Browser(PAGE_SIZE)

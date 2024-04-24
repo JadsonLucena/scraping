@@ -119,10 +119,23 @@ export default class Browser {
       const res = await this.#pages[url].goto(url, {
         timeout: 0,
         waitUntil: 'networkidle0'
+      }).catch(() => {
+        return {
+          ok: () => false,
+          status: () => 404,
+          statusText: () => 'Not Found'
+        }
       })
 
       if (!res?.ok() && res?.status() !== 304) {
-        throw new Error(res?.statusText() ?? 'This web page is not available')
+        await this.#pages[url].close().then(() => {
+          delete this.#pages[url]
+        })
+
+        throw new Error(JSON.stringify({
+          status: res?.status() || 404,
+          message: res?.statusText() || 'Not Found'
+        }))
       }
     }
 

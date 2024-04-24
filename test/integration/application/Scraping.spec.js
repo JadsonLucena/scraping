@@ -277,16 +277,16 @@ test('Given that you want to get the information from a website but robots are n
   }))
 })
 
-test('Given that you want to get the information from a website but this web page is not available', async () => {
+test('Given that you want to get the information from a website but this web page is not found', async () => {
   await expect(() => Scraping(browser, url, {
     fields: null
   })).rejects.toThrowError(new TypeError('Invalid fields'))
 
   const errorBrowser = {
     open: () => {
-      throw new Error('This web page is not available')
+      throw new Error('Not Found')
     }
   }
 
-  return expect(() => Scraping(errorBrowser, url)).rejects.toThrowError(new Error('This web page is not available'))
+  return expect(() => Scraping(errorBrowser, url)).rejects.toThrowError(new Error('Not Found'))
 })
