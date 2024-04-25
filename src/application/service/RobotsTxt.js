@@ -1,9 +1,14 @@
+/*
+  REP: https://www.rfc-editor.org/rfc/rfc9309.html
+*/
+
 function GetRobotsTxt (url, userAgent) {
   return fetch(`${url.origin}/robots.txt`, {
     headers: {
       accept: 'text/plain',
       'User-Agent': userAgent
-    }
+    },
+    redirect: 'follow'
   }).then(res => {
     if (res.ok) {
       return res.text()
@@ -45,24 +50,45 @@ function RobotsTxtParse (robotsTxt) {
     }
   })
 
+  const userAgents = Object.keys(res.userAgent)
+  userAgents.forEach((key, i) => {
+    if (
+      res.userAgent[key].allow.length === 0 &&
+      res.userAgent[key].disallow.length === 0
+    ) {
+      const nextKey = userAgents.slice(i + 1).find(key => (
+        res.userAgent[key].allow.length !== 0 ||
+        res.userAgent[key].disallow.length !== 0
+      ))
+
+      if (nextKey) {
+        res.userAgent[key] = res.userAgent[nextKey]
+      }
+    }
+  })
+
   return res
 }
 
 function IsRouteAllowedForRobots (url, robotsParsed, userAgent) {
-  if (robotsParsed.userAgent['*']) {
-    for (const path of robotsParsed.userAgent['*'].disallow) {
-      if (new RegExp(`^${path.replace(/\*/g, '.*')}`).test(url.pathname)) {
-        return false
-      }
-    }
+  userAgent = userAgent.trim().toLowerCase().replace(/[^a-z_-]+/g, '')
+
+  let disallow = []
+  if (userAgent in robotsParsed.userAgent) {
+    disallow = robotsParsed.userAgent[userAgent].disallow
+  } else if ('*' in robotsParsed.userAgent) {
+    disallow = robotsParsed.userAgent['*'].disallow
   }
 
-  userAgent = userAgent.trim().toLowerCase()
-  if (robotsParsed.userAgent[userAgent]) {
-    for (const path of robotsParsed.userAgent[userAgent].disallow) {
-      if (new RegExp(`^${path.replace(/\*/g, '.*')}`).test(url.pathname)) {
-        return false
-      }
+  for (let path of disallow) {
+    if (!path.endsWith('*') && !path.endsWith('$')) {
+      path += '*'
+    }
+
+    path = path.replaceAll('*', '.*').replace('?', '\\?').replace('$', '')
+
+    if (new RegExp(`^${path}$`).test(url.pathname)) {
+      return false
     }
   }
 

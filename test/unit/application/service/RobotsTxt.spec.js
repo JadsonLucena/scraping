@@ -15,7 +15,6 @@ const INVALID_INPUT_TYPES = [
   undefined
 ]
 
-const url = new URL('https://example.com/foo/bar')
 const defaultBody = '<html><head><title>Hello World</title></head><body><h1>Hello World</h1></body></html>'
 const robotsTxt = `
 Crawl-delay: 10
@@ -24,11 +23,19 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
+User-agent: bot
+Sitemap: https://example.com/sitemap.xml
+
+User-agent: test
+Disallow: /log*in/
+
 User-agent: Robots
 Allow: /home
-Disallow: /login
 
-Sitemap: https://example.com/sitemap.xml
+User-agent: Robots
+Disallow: /log*in/
+
+User-agent: empty
 `
 
 jest.spyOn(global, 'fetch').mockImplementation((resource, options) => {
@@ -61,8 +68,8 @@ test('Given you want to call function with invalid arguments', async () => {
 })
 
 test('Given that you want to load an inaccessible page', async () => {
-  await expect(IsRouteAllowedForRobots(new URL('https://not-found.com/path'))).toBeTruthy()
-  return expect(IsRouteAllowedForRobots({ origin: 'https://example.com/path' })).toBeTruthy()
+  await expect(IsRouteAllowedForRobots(new URL('https://not-found.com/path'))).resolves.toBeTruthy()
+  return expect(IsRouteAllowedForRobots({ origin: 'https://example.com/path' })).resolves.toBeTruthy()
 })
 
 test('Given that you want to load a page but there was an unexpected error', async () => {
@@ -70,19 +77,29 @@ test('Given that you want to load a page but there was an unexpected error', asy
 })
 
 test('Given that you want to load a page', async () => {
-  await expect(IsRouteAllowedForRobots(new URL('https://example.com/login'), 'Robots')).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/login/'), 'Robots')).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/log_in/'), 'Robots')).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/login'), 'Robots')).resolves.toBeTruthy()
   await expect(IsRouteAllowedForRobots(new URL('https://example.com/home'), 'Robots')).resolves.toBeTruthy()
-  await expect(IsRouteAllowedForRobots(url, 'Robots')).resolves.toBeTruthy()
-  return expect(IsRouteAllowedForRobots(url)).resolves.toBeTruthy()
+
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/login/'), 'bot')).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/log_in/'), 'bot')).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/login'), 'bot')).resolves.toBeTruthy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/home'), 'bot')).resolves.toBeTruthy()
+
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/foo/bar'), 'Robots')).resolves.toBeTruthy()
+  return expect(IsRouteAllowedForRobots(new URL('https://example.com/foo/bar'))).resolves.toBeTruthy()
 })
 
 test('Given that you want to load a page prohibited for robots', async () => {
+  jest.clearAllMocks()
   jest.spyOn(global, 'fetch').mockImplementation(() => {
     const status = 200
     const contentType = 'text/plain'
     const body = `
       User-agent: *
-      Disallow: /
+      Disallow: /foo
+      Disallow: /bar/$
     `
 
     return Promise.resolve(new Response(body, {
@@ -93,5 +110,14 @@ test('Given that you want to load a page prohibited for robots', async () => {
     }))
   })
 
-  return expect(IsRouteAllowedForRobots(url)).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/fo'))).resolves.toBeTruthy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/foo'))).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/foo/'))).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/foo/bar'))).resolves.toBeFalsy()
+
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/bar/'))).resolves.toBeFalsy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/bar'))).resolves.toBeTruthy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/barrr'))).resolves.toBeTruthy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/barrr/'))).resolves.toBeTruthy()
+  await expect(IsRouteAllowedForRobots(new URL('https://example.com/bar/baz'))).resolves.toBeTruthy()
 })
