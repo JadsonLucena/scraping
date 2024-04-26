@@ -4,13 +4,35 @@ import http2 from 'node:http2'
 import fs from 'node:fs'
 
 import {
-  PORT,
+  PORTS,
   TLS,
-  USE_HTTP2
+  USE_HTTP2,
+  ENV
 } from './config.js'
 import REST from './infrastructure/presenters/REST.js'
 
-let server
+let server, secureServer
+
+const onRequestHandler = (req, res) => {
+  if (secureServer && !req.connection.encrypted) {
+    res.writeHead(308, {
+      Location: `https://${req.headers.host.replace(PORTS.HTTP, PORTS.HTTPS)}${req.url}`
+    })
+    return res.end('Permanent Redirect')
+  } else if (req.url.startsWith('/favicon')) {
+    res.writeHead(404, { 'Content-Type': 'text/plain' })
+    return res.end('Not Found')
+  } else if (req.url.startsWith('/soap/')) {
+    // return SOAP.router(req, res)
+  } else if (req.url.startsWith('/graphql/')) {
+    // return GraphQL.router(req, res)
+  } else if (req.url.startsWith('/grpc/')) {
+    // return GRPC.router(req, res)
+  }
+
+  REST.router(req, res)
+}
+
 if (
   TLS.CERT && TLS.CERT.trim() &&
   TLS.KEY && TLS.KEY.trim()
@@ -19,36 +41,53 @@ if (
   const key = fs.readFileSync(TLS.KEY)
 
   if (USE_HTTP2) {
-    server = http2.createSecureServer({
+    secureServer = http2.createSecureServer({
       cert,
       key,
       allowHTTP1: true
     }, onRequestHandler)
   } else {
-    server = https.createServer({
+    secureServer = https.createServer({
       cert,
       key
     }, onRequestHandler)
   }
-} else {
-  if (USE_HTTP2) {
-    server = http2.createServer(onRequestHandler)
-  } else {
-    server = http.createServer(onRequestHandler)
-  }
+
+  secureServer.listen(PORTS.HTTPS, () => {
+    if (ENV !== 'production') console.info(`Listening on port ${PORTS.HTTPS}`)
+  })
 }
 
-server.listen(Number(PORT), () => console.info(`listening on port ${PORT}`))
+if (USE_HTTP2) {
+  server = http2.createServer(onRequestHandler)
+} else {
+  server = http.createServer(onRequestHandler)
+}
 
-const onRequestHandler = (req, res) => {
-  if (req.url.startsWith('/favicon')) {
-    res.writeHead(204, { 'Content-Type': 'text/plain' })
-    return res.end('No Content')
-  } else if (req.url.startsWith('/graphql/')) {
-    // return GraphQL(req, res)
-  } else if (req.url.startsWith('/grpc/')) {
-    // return GRPC(req, res)
+server.listen(PORTS.HTTP, () => {
+  if (
+    secureServer &&
+    ENV !== 'production'
+  ) {
+    console.info(`Listening on port ${PORTS.HTTP} to redirect to port ${PORTS.HTTPS}`)
+  } else if (ENV !== 'production') {
+    console.info(`Listening on port ${PORTS.HTTP}`)
   }
+})
 
-  REST(req, res)
+server.prependOnceListener('close', () => {
+  if (ENV !== 'production') console.info('Server closed')
+
+  REST.close()
+})
+
+secureServer?.prependOnceListener('close', () => {
+  if (ENV !== 'production') console.info('Secure Server closed')
+
+  REST.close()
+})
+
+export default {
+  server,
+  secureServer
 }

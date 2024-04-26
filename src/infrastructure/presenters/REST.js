@@ -19,54 +19,47 @@ const scraping = new Scraping({
 })
 const router = new RouterExpress()
 
-router.get('/*', async (req, res) => {
-  try {
-    const url = new URL((req.protocol ?? 'http') + '://' + req.headers.host + req.originalUrl)
+router.get('/', async (req, res) => {
+  const url = new URL(`${req.connection.encrypted ? 'https' : 'http'}://${req.headers.host}${req.url}`)
 
-    const { headers, data } = await scraping.handler(url, {
-      authorization: req.headers.authorization,
-      cookie: req.headers.cookie,
-      origin: req.headers.origin,
-      ip: req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
-    })
+  const { headers, data } = await scraping.handler(url, {
+    authorization: req.headers.authorization,
+    cookie: req.headers.cookie,
+    origin: req.headers.origin,
+    ip: req.headers['x-forwarded-for'] ?? req.socket.remoteAddress
+  })
 
-    res.writeHead(200, {
-      'Content-Type': 'application/json',
-      ...headers
-    })
-    res.end(JSON.stringify(data))
-  } catch (err) {
-    // if (ENV !== 'production') process.stderr.write(`${err.stack}\n`)
-    if (ENV !== 'production') console.error(err)
-
-    try {
-      err = JSON.parse(err.message)
-      res.writeHead(err.status, { 'Content-Type': 'text/plain' })
-    } catch (_) {
-      res.writeHead(500, { 'Content-Type': 'text/plain' })
-    }
-
-    res.end(err.message)
-  }
+  res.writeHead(200, {
+    'Content-Type': 'application/json',
+    ...headers
+  })
+  res.end(JSON.stringify(data))
 })
 
-router.all('/*', (req, res) => {
+router.get('/*', (req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/html' })
   res.end('Repository: <a href="https://github.com/jadsonlucena/scraping" target="_blank">@jadsonlucena/scraping</a>')
 })
 
-/* router.error((err, req, res) => {
-  // if (ENV !== 'production') process.stderr.write(`${err.stack}\n`)
-  if (ENV !== 'production') console.error(err)
-
+router.error((err, req, res) => {
   try {
     err = JSON.parse(err.message)
-    res.writeHead(err.status, { 'Content-Type': 'text/plain' })
+    res.writeHead(err.status, {
+      'Content-Type': 'text/plain'
+    })
   } catch (_) {
-    res.writeHead(500, { 'Content-Type': 'text/plain' })
+    process.stderr.write(`${err.stack}\n`)
+    res.writeHead(500, {
+      'Content-Type': 'text/plain'
+    })
   }
 
   res.end(err.message)
-}) */
+})
 
-export default router.handler
+export default {
+  router: router.handler,
+  close () {
+    scraping.browser.close()
+  }
+}

@@ -8,9 +8,14 @@
     "node": ">=20.6"
   },
   "scripts": {
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest ./test --onlyChanged",
+    "test:unit": "NODE_OPTIONS='--experimental-vm-modules' jest ./test/unit --onlyChanged",
+    "test:integration": "NODE_OPTIONS='--experimental-vm-modules' jest ./test/integration --onlyChanged",
+    "pretest:E2E": "openssl req -new -newkey rsa:4096 -x509 -sha256 -days 1 -nodes -out ./test/E2E/fullchain.crt -keyout ./test/E2E/privkey.key -subj '/C=UA/ST=Some-State/L=/O=Internet Widgits Pty Ltd/OU=/CN='",
+    "test:E2E": "NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_OPTIONS='--experimental-vm-modules' jest ./test/E2E --onlyChanged",
+    "pretest": "npm run pretest:E2E",
+    "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 NODE_OPTIONS='--experimental-vm-modules' jest ./test --onlyChanged",
     "lint": "eslint ./src ./test --ext .js",
-    "start": "node --trace-warnings --env-file=config.env ./src/index.js"
+    "start": "node --trace-warnings --env-file=./.env ./src/index.js"
   },
   "files": [
     "src/",

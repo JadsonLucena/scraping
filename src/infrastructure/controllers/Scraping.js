@@ -74,7 +74,7 @@ export default class Scraping {
 
     let queryURL
     try {
-      queryURL = new URL(querys.url)
+      queryURL = new URL(decodeURIComponent(querys.url))
     } catch (err) {
       throw new Error(JSON.stringify({
         status: 400,

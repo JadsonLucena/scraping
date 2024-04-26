@@ -72,14 +72,10 @@ export default class Browser {
           ...options
         }).then(screenshot => encoding === 'base64' ? `data:image/${type};base64,${screenshot}` : screenshot)
       },
-      close: () => {
-        if (this.#pages[url]) {
-          return this.#pages[url].close().then(() => {
-            delete this.#pages[url]
-          })
-        }
-
-        return Promise.resolve()
+      close: async () => {
+        return await this.#pages[url]?.close()?.then(() => {
+          delete this.#pages[url]
+        })
       }
     }
   }
@@ -128,7 +124,7 @@ export default class Browser {
       })
 
       if (!res?.ok() && res?.status() !== 304) {
-        await this.#pages[url].close().then(() => {
+        await this.#pages[url]?.close()?.then(() => {
           delete this.#pages[url]
         })
 
@@ -142,14 +138,10 @@ export default class Browser {
     return this.#buildPage(url)
   }
 
-  close () {
-    if (this.#browser) {
-      return this.#browser.close().then(() => {
-        this.#pages = {}
-        this.#browser = undefined
-      })
-    }
-
-    return Promise.resolve()
+  async close () {
+    return await this.#browser?.close()?.then(() => {
+      this.#pages = {}
+      this.#browser = undefined
+    })
   }
 }
