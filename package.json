@@ -39,7 +39,7 @@
   "homepage": "https://github.com/JadsonLucena/scraping#readme",
   "dependencies": {
     "express": "^4",
-    "puppeteer": "^21",
+    "puppeteer": "^22.11.2",
     "@jadsonlucena/signedaccess": "^1"
   },
   "devDependencies": {
